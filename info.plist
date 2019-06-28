@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string></string>
+	<key>connections</key>
+	<dict>
+		<key>2B318D15-7D94-4346-9596-CED5DC9430D4</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>522DF0B2-9558-407C-99ED-09EA6CDE8F4D</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>522DF0B2-9558-407C-99ED-09EA6CDE8F4D</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>9AEE098B-2170-47BD-BDC3-84EC17AA969C</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>6E4EEBD5-0AB8-4986-8EC0-1CD707F41689</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>11D5721D-E45C-4D45-82C8-2CC370002271</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>moajo</string>
+	<key>description</key>
+	<string></string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>GoogleCalendar</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string>https://calendar.google.com</string>
+				<key>utf8</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>11D5721D-E45C-4D45-82C8-2CC370002271</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>keyword</key>
+				<string>gc</string>
+				<key>subtext</key>
+				<string></string>
+				<key>text</key>
+				<string>open Google Calender</string>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>6E4EEBD5-0AB8-4986-8EC0-1CD707F41689</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>keyword</key>
+				<string>gc</string>
+				<key>subtext</key>
+				<string>[title] [4/1] [19:30]</string>
+				<key>text</key>
+				<string>Add event to Calendar</string>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>2B318D15-7D94-4346-9596-CED5DC9430D4</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string>{query}</string>
+				<key>utf8</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>9AEE098B-2170-47BD-BDC3-84EC17AA969C</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>script</key>
+				<string>require 'date'
+require 'time'
+
+query = ARGV[0].split
+
+
+def gen_url(title,date)
+    if date == nil then
+        return "https://calendar.google.com/calendar/r/eventedit?text=%s" % title
+    end
+    return "https://calendar.google.com/calendar/r/eventedit?text=%s&amp;dates=%s/%s" % [
+        title,
+        date.strftime("%Y%m%dT%H%M00Z"),
+        date.strftime("%Y%m%dT%H%M00Z")
+    ]
+end
+
+if query.length == 1 then
+    # title only
+    title = query[0]
+    print gen_url(title, nil)
+    return
+end
+if query.length == 3 then
+    # etc. '${eventname} 01/01 17:00'
+    datetext = query[1]+query[2]
+    date = Time.strptime(datetext,"%m/%d %H:%M")
+    date = (date.to_time - Time.now.gmt_offset).to_datetime
+    print gen_url(title, date)
+    return
+end
+if query.length == 2 then
+    # title and date
+    title = query[0]
+    if query[1].include?("/") then
+        date = Time.strptime(query[1],"%m/%d")
+    else
+        date = Time.strptime(query[1],"%H:%M")
+    end
+    date = (date.to_time - Time.now.gmt_offset).to_datetime
+    print gen_url(title, date)
+    return
+end</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>2</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>522DF0B2-9558-407C-99ED-09EA6CDE8F4D</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>Googleカレンダーの予定作成する
+
+usage:
+	gc MTG 6/28 16:30 # ブラウザが開く
+	gc MTG # タイトルだけ
+	gc MTG 6/28 # 日付だけ
+	gc MTG 16:30 # 時間だけ</string>
+	<key>uidata</key>
+	<dict>
+		<key>11D5721D-E45C-4D45-82C8-2CC370002271</key>
+		<dict>
+			<key>xpos</key>
+			<integer>270</integer>
+			<key>ypos</key>
+			<integer>50</integer>
+		</dict>
+		<key>2B318D15-7D94-4346-9596-CED5DC9430D4</key>
+		<dict>
+			<key>xpos</key>
+			<integer>50</integer>
+			<key>ypos</key>
+			<integer>330</integer>
+		</dict>
+		<key>522DF0B2-9558-407C-99ED-09EA6CDE8F4D</key>
+		<dict>
+			<key>xpos</key>
+			<integer>305</integer>
+			<key>ypos</key>
+			<integer>345</integer>
+		</dict>
+		<key>6E4EEBD5-0AB8-4986-8EC0-1CD707F41689</key>
+		<dict>
+			<key>xpos</key>
+			<integer>50</integer>
+			<key>ypos</key>
+			<integer>50</integer>
+		</dict>
+		<key>9AEE098B-2170-47BD-BDC3-84EC17AA969C</key>
+		<dict>
+			<key>xpos</key>
+			<integer>545</integer>
+			<key>ypos</key>
+			<integer>335</integer>
+		</dict>
+	</dict>
+	<key>variablesdontexport</key>
+	<array/>
+	<key>version</key>
+	<string>0.1</string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>
